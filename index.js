@@ -20,20 +20,11 @@ app.get("/", (_req, res) => {
     res.status(200).send("Antti.Codes ShareX Custom Uploader");
 })
 
-app.get("/:file", (req, res) => {
-    if(fs.existsSync(__dirname + "/images/" + req.params.file)) {
-        res.status(200).sendFile(__dirname + "/images/" + req.params.file);
-    } else {
-        res.status(404);
-    }
-})
+app.use(express.static("images"));
 
 const authenticate = (req, res, next) => {
-    if(req.query.token != process.env.TOKEN) {
-        res.sendStatus(401);
-        return;
-    }
-    next();
+    if(req.query.token != process.env.TOKEN) return res.sendStatus(401);
+    else next();
 }
 
 app.post("/upload", authenticate, upload.single("image"), (req, res) => {
