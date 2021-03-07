@@ -2,14 +2,18 @@
     "name": "customuploader",
     "version": "1.0.0",
     "main": "index.js",
-    "author": "antti@antti.codes",
+    "author": "Antti <antti@antti.codes>",
     "license": "MIT",
+    "scripts": {
+        "start": "node .",
+        "clear": "node -e '(new (require(\"enmap\"))(\"files\")).clear(); [\"files\", \"images\", \"tmp\"].forEach(f=>fs.rmdirSync(f, {recursive: true}))'"
+    },
     "dependencies": {
         "better-sqlite3": "^7.1.2",
         "dotenv": "^8.2.0",
-        "enmap": "^5.8.2",
+        "enmap": "^5.8.4",
         "express": "^4.17.1",
-        "helmet": "^4.4.0",
+        "helmet": "^4.4.1",
         "multer": "^1.4.2",
         "nanoid": "^3.1.20"
     }
