@@ -1,23 +1,42 @@
 require("dotenv").config();
-const { PORT, DOMAIN, TOKEN, CHARS, IDLENGTH, DELETELENGTH } = process.env;
+const { PORT, DOMAIN, TOKEN, CHARS, IDLENGTH, DELETELENGTH, TMPDEST } = process.env;
 const express = require("express");
 const multer = require("multer");
 const helmet = require("helmet");
 const Enmap = require("enmap");
 const db = new Enmap("files");
-const upload = multer({ dest: "tmp/" });
+const upload = multer({ dest: TMPDEST });
 const { customAlphabet } = require("nanoid");
 const genId = customAlphabet(CHARS, parseInt(IDLENGTH));
 const genDeleteToken = customAlphabet(CHARS, parseInt(DELETELENGTH));
 const fs = require("fs");
 const app = new express();
 
+const timeGen = () => {
+    let date = new Date();
+    return `[${date.getHours().toString().padStart(2, "0")}`
+         + `:${date.getMinutes().toString().padStart(2, "0")}`
+         + `:${date.getSeconds().toString().padStart(2, "0")}] `;
+};
+
+const log = (msg, error = false) => {
+    msg = timeGen() + msg;
+    if(error) console.error(msg);
+    else console.log(msg);
+    fs.appendFile("uploader.log", msg + "\n", err => {
+        if(err) console.error(timeGen() + "Error writing to log file");
+    });
+};
+
+const error = msg => log(msg, true);
+
 if(!fs.existsSync("files")) fs.mkdirSync("files");
 if(!fs.existsSync("images")) fs.mkdirSync("images");
+if(!fs.existsSync("uploader.log")) fs.closeSync(fs.openSync("uploader.log", "a"));
 
 app.listen(PORT, () => {
-    console.log(`Webserver running on port ${PORT}, ` +
-                `accesible at https://${DOMAIN}/`);
+    log(`Webserver running on port ${PORT}, ` +
+        `accesible at https://${DOMAIN}/`);
 });
 
 app.use(helmet());
@@ -36,8 +55,10 @@ app.get("/f/:id", (req, res) => {
 });
 
 const authenticate = (req, res, next) => {
-    if(req.query.token != TOKEN) return res.sendStatus(401);
-    else next();
+    if(req.query.token != TOKEN) {
+        log("Unauthorized upload attempt!");
+        return res.sendStatus(401);
+    } else next();
 };
 
 app.post("/upload", authenticate, upload.single("file"), (req, res) => {
@@ -61,9 +82,10 @@ app.post("/upload", authenticate, upload.single("file"), (req, res) => {
                 url: `https://${DOMAIN}/${isImage ? "i" : "f"}/${file}`,
                 delete: `https://${DOMAIN}/d/${id}/${deleteToken}`
             });
+            log(`Uploaded new file "${req.file.originalname}" with id of "${id}"`);
         });
     } catch(e) {
-        console.error(e);
+        error(e);
         res.status(500).send({
             status: 500,
             message: "Internal server error occured trying to upload file"
@@ -79,9 +101,10 @@ app.get("/d/:id/:token", (req, res) => {
         fs.unlink("./" + file, () => {
             res.sendStatus(200);
             db.delete(req.params.id);
+            log(`Deleted file "${req.file.originalname}" with id of "${req.params.id}"`);
         });
     } catch (e) {
-        console.error(e);
+        error(e);
         res.status(500).send({
             status: 500,
             message: "Internal server error occured trying to delete the file"

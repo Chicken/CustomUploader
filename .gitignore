@@ -3,4 +3,4 @@ node_modules
 files
 images
 data
-tmp
+uploader.log
