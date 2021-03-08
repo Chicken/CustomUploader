@@ -6,7 +6,7 @@
     "license": "MIT",
     "scripts": {
         "start": "node .",
-        "clear": "node -e '(new (require(\"enmap\"))(\"files\")).clear(); [\"files\", \"images\", \"tmp\"].forEach(f=>fs.rmdirSync(f, {recursive: true}))'"
+        "clear": "rm -rf data images files"
     },
     "dependencies": {
         "better-sqlite3": "^7.1.2",
