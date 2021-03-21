@@ -96,12 +96,12 @@ app.post("/upload", authenticate, upload.single("file"), (req, res) => {
 app.get("/d/:id/:token", (req, res) => {
     try {
         if(!db.has(req.params.id)) return res.sendStatus(404);
-        let { token, file } = db.get(req.params.id);
+        let { token, file, name } = db.get(req.params.id);
         if(token != req.params.token) return res.sendStatus(401);
         fs.unlink("./" + file, () => {
             res.sendStatus(200);
             db.delete(req.params.id);
-            log(`Deleted file "${req.file.originalname}" with id of "${req.params.id}"`);
+            log(`Deleted file "${name}" with id of "${req.params.id}"`);
         });
     } catch (e) {
         error(e);
