@@ -1,6 +1,6 @@
 node_modules
 .env
 files
-images
+embed
 data
 uploader.log

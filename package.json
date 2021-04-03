@@ -6,7 +6,7 @@
     "license": "MIT",
     "scripts": {
         "start": "node .",
-        "clear": "rm -rf data images files"
+        "clear": "rm -rf data embed files"
     },
     "dependencies": {
         "better-sqlite3": "^7.1.4",

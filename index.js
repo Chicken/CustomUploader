@@ -1,6 +1,7 @@
 // Get configs from .env
 require("dotenv").config();
-const { PORT, DOMAIN, TOKEN, CHARS, IDLENGTH, DELETELENGTH, TMPDEST } = process.env;
+const { PORT, DOMAIN, TOKEN, CHARS, IDLENGTH, DELETELENGTH, TMPDEST, EMBED: _EMBED } = process.env;
+const EMBED = new Set(_EMBED.split(","));
 // Require dependencies
 const express = require("express");
 const multer = require("multer");
@@ -56,7 +57,7 @@ const error = msg => log(msg, true);
 
 // Create data directories if they don't exists
 if(!fs.existsSync("files")) fs.mkdirSync("files");
-if(!fs.existsSync("images")) fs.mkdirSync("images");
+if(!fs.existsSync("embed")) fs.mkdirSync("embed");
 if(!fs.existsSync("uploader.log")) fs.closeSync(fs.openSync("uploader.log", "a"));
 
 // Make the app listen on the defined port
@@ -73,8 +74,8 @@ app.get("/", (_req, res) => {
     res.status(200).sendFile(__dirname + "/index.html");
 });
 
-// Serve images staticly on /i/ for embedding on services like Discord
-app.use("/i/", express.static("images"));
+// Serve images (and videos) staticly on /i/ for embedding on services like Discord
+app.use("/i/", express.static("embed"));
 
 // Download any file with the original name (even images) from /f/
 app.get("/f/:id", (req, res) => {
@@ -110,22 +111,18 @@ const authenticate = (req, res, next) => {
 app.post("/upload", authenticate, upload.single("file"), (req, res) => {
     // Wrap everything in try block in case of errors
     try {
-        // If type is not in the known list
-        if(!(["file", "image"].includes(req.query.type)))
-            // Respond with 400 (Bad Request)
-            return res.sendStatus(400);
-        // Simple boolean for type (might need to change in future in case of more types, like albums/collections)
-        let isImage = req.query.type == "image";
         // Find the extension of the file
-        let ext = "." + req.file.originalname.split(".").reverse()[0];
+        let ext = req.file.originalname.split(".").reverse()[0].toLowerCase();
+        // Determine if the file should be linked directly with extension or no
+        let isEmbeddable = EMBED.has(ext);
         // Generate a unique id for the upload 
         let id = genId();
         // And even more unique token that's hard to guess
         let deleteToken = genDeleteToken();
         // Append the extension to the file if this is an image it isn't it just empty.
-        let file = id + (ext != "." && isImage ? ext : "");
+        let file = id + (isEmbeddable ? "." + ext : "");
         // Change the upload folder depending on type too
-        let path = `${isImage ? "images" : "files"}/${file}`;
+        let path = `${isEmbeddable ? "embed" : "files"}/${file}`;
         // Rename (move) file to our data folders
         fs.rename(req.file.path, path, () => {
             // Set the id on the database to reference the upload's details
@@ -137,7 +134,7 @@ app.post("/upload", authenticate, upload.single("file"), (req, res) => {
             // Send a 200 (OK) response with json containing the upload public url and url for deletion with the delete token
             res.status(200).send({
                 status: 200,
-                url: `https://${DOMAIN}/${isImage ? "i" : "f"}/${file}`,
+                url: `https://${DOMAIN}/${isEmbeddable ? "i" : "f"}/${file}`,
                 delete: `https://${DOMAIN}/d/${id}/${deleteToken}`
             });
             // Log the event
