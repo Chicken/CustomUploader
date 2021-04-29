@@ -5,5 +5,4 @@ updates:
   schedule:
     interval: daily
     time: "14:20"
-    timezone: Africa/Abidjan
   open-pull-requests-limit: 10
