@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "better-sqlite3": "^7.3.0",
-        "dotenv": "^8.2.0",
+        "dotenv": "^8.5.1",
         "enmap": "^5.8.5",
         "express": "^4.17.1",
         "helmet": "^4.6.0",
