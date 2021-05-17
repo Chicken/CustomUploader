@@ -9,7 +9,7 @@
         "clear": "rm -rf data embed files"
     },
     "dependencies": {
-        "better-sqlite3": "^7.3.0",
+        "better-sqlite3": "^7.4.0",
         "dotenv": "^9.0.2",
         "enmap": "^5.8.5",
         "express": "^4.17.1",
