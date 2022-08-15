@@ -62,6 +62,10 @@ app.get("/", (_req, res) => {
     res.status(200).sendFile(__dirname + "/index.html");
 });
 
+app.get("/robots.txt", (_req, res) => {
+    res.status(200).sendFile(__dirname + "/robots.txt");
+});
+
 app.use("/i/", express.static("embed"));
 
 app.get("/f/:id", (req, res) => {
